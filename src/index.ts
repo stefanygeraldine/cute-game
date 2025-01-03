@@ -41,8 +41,8 @@ import { Application, Sprite, Assets, Graphics } from 'pixi.js';
 
             if (object.polygon) {
                 // Draw the collision polygon
-                childGraphics.beginFill(0xff0000, 0.5); // Red with 50% opacity
-                childGraphics.lineStyle(1, 0xff0000);
+                childGraphics.beginFill(0xff0000, 0); // Red with 50% opacity
+                //childGraphics.lineStyle(0, 0xff0000);
                 childGraphics.moveTo(object.x + object.polygon[0].x, object.y + object.polygon[0].y);
                 object.polygon.forEach((point: any, index: number) => {
                     if (index > 0) {
