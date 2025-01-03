@@ -16,8 +16,6 @@ import { Application, Sprite, Assets, Graphics } from 'pixi.js';
     const tileMap01 = await Assets.load('src/assets/tilemap01.1.png');
 
     const bg1 = new Sprite(tileMap01);
-    //bg1.width = window.innerWidth;
-    //bg1.height = window.innerHeight;
     app.stage.addChild(bg1);
 
 
@@ -74,7 +72,7 @@ import { Application, Sprite, Assets, Graphics } from 'pixi.js';
     const steps = 10
     console.log('app', app.stage)
 
-    app.ticker.add((time) => {
+    app.ticker.add((_time) => {
         //console.log('Colisión detectada!');
     });
     console.log('>>>', player.getBounds())
