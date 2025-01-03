@@ -1,94 +1,136 @@
 import { Application, Sprite, Assets, Graphics } from 'pixi.js';
 
 // Asynchronous IIFE
-(async () =>
-{
+(async () => {
     // Create a PixiJS application.
     const app = new Application();
 
     // Initialize the application.
     await app.init({ background: '#000000', resizeTo: window });
 
-    // Then adding the application's canvas to the DOM body.
+    // Adding the application's canvas to the DOM body.
     document.body.appendChild(app.canvas);
 
-
+    // Load the tilemap and player assets
     const tileMap01 = await Assets.load('src/assets/tilemap01.1.png');
-
     const bg1 = new Sprite(tileMap01);
-    //bg1.width = window.innerWidth;
-    //bg1.height = window.innerHeight;
     app.stage.addChild(bg1);
-
-
 
     const playerSprite = await Assets.load('https://pixijs.com/assets/bunny.png');
     const player = new Sprite(playerSprite);
-    player.x = 100; // Posición inicial en X
-    player.y = 400; // Posición inicial en Y
+    player.x = 100; // Initial X position
+    player.y = 400; // Initial Y position
+    player.width = 50; // Adjust as needed for scaling
+    player.height = 50; // Adjust as needed for scaling
     app.stage.addChild(player);
 
-//collider
+    // Load the collider JSON and process the colliders
     const colliderJson = await Assets.load('src/assets/tilemap01.json');
-    const collider = new Sprite(colliderJson);
-    const collidersLayer = collider.layers.find((layer: any) => layer.name === 'colliders');
+    const collidersLayer = colliderJson.layers.find((layer: any) => layer.name === 'colliders');
+
+    const collidersGraphics = new Graphics();
 
     function processCollisionLayer() {
-        // Find the colliders layer
-
         if (!collidersLayer) {
             console.error('No colliders layer found');
             return;
         }
 
-        const graphics = new Graphics();
-
         collidersLayer.objects.forEach((object: any) => {
-            if (object.polygon) {
-                // Draw the collision polygon (optional, for visualization)
-                graphics.beginFill(0xff0000, 0.5); // Red with 50% opacity
-                graphics.lineStyle(1, 0xff0000);
+            const childGraphics = new Graphics();
 
-                graphics.moveTo(object.x + object.polygon[0].x, object.y + object.polygon[0].y);
+            if (object.polygon) {
+                // Draw the collision polygon
+                childGraphics.beginFill(0xff0000, 0.5); // Red with 50% opacity
+                childGraphics.lineStyle(1, 0xff0000);
+                childGraphics.moveTo(object.x + object.polygon[0].x, object.y + object.polygon[0].y);
                 object.polygon.forEach((point: any, index: number) => {
                     if (index > 0) {
-                        graphics.lineTo(object.x + point.x, object.y + point.y);
+                        childGraphics.lineTo(object.x + point.x, object.y + point.y);
                     }
                 });
-                graphics.closePath();
-                graphics.endFill();
+                childGraphics.closePath();
+                childGraphics.endFill();
+            } else {
+                // For rectangular colliders
+                childGraphics.beginFill(0xff0000, 0.5);
+                childGraphics.drawRect(object.x, object.y, object.width, object.height);
+                childGraphics.endFill();
             }
+
+            childGraphics.scale.set(4.5);
+            collidersGraphics.addChild(childGraphics);
         });
-        graphics.scale.set(4.5);
-        app.stage.addChild(graphics);
+
+        app.stage.addChild(collidersGraphics);
     }
 
+    processCollisionLayer();
 
+    // Collision Detection Function
+    function checkChildCollision(player: Sprite, parentGraphics: Graphics): string | null {
+        for (const child of parentGraphics.children) {
+            if (child instanceof Graphics) {
+                const playerBounds = player.getBounds();
+                const childBounds = child.getBounds();
 
+                if (
+                    playerBounds.x < childBounds.x + childBounds.width &&
+                    playerBounds.x + playerBounds.width > childBounds.x &&
+                    playerBounds.y < childBounds.y + childBounds.height &&
+                    playerBounds.y + playerBounds.height > childBounds.y
+                ) {
+                    // Determine collision side
+                    const overlapX = Math.min(
+                        playerBounds.x + playerBounds.width - childBounds.x,
+                        childBounds.x + childBounds.width - playerBounds.x
+                    );
+                    const overlapY = Math.min(
+                        playerBounds.y + playerBounds.height - childBounds.y,
+                        childBounds.y + childBounds.height - playerBounds.y
+                    );
 
-    processCollisionLayer()
+                    if (overlapX < overlapY) {
+                        return playerBounds.x < childBounds.x ? 'right' : 'left';
+                    } else {
+                        return playerBounds.y < childBounds.y ? 'down' : 'up';
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
+    const steps = 15;
+    let isMoving = { x: 0, y: 0 }; // Track movement intent
 
+    // Game loop
+    app.ticker.add(() => {
+        const collisionSide = checkChildCollision(player, collidersGraphics);
 
+        if (collisionSide) {
+            // Stop movement only in the direction of the collision
+            if (collisionSide === 'right' && isMoving.x > 0) isMoving.x = 0;
+            if (collisionSide === 'left' && isMoving.x < 0) isMoving.x = 0;
+            if (collisionSide === 'down' && isMoving.y > 0) isMoving.y = 0;
+            if (collisionSide === 'up' && isMoving.y < 0) isMoving.y = 0;
+        }
 
-    const steps = 10
-    console.log('app', app.stage)
-
-    app.ticker.add((time) => {
-        //console.log('Colisión detectada!');
+        // Apply movement
+        player.x += isMoving.x;
+        player.y += isMoving.y;
     });
-    console.log('>>>', player.getBounds())
 
-
-
+    // Player movement
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight') player.x += steps;
-        if (e.key === 'ArrowLeft') player.x -= steps;
-        if (e.key === 'ArrowUp') player.y -= steps;
-        if (e.key === 'ArrowDown') player.y += steps;
-
+        if (e.key === 'ArrowRight') isMoving.x = steps;
+        if (e.key === 'ArrowLeft') isMoving.x = -steps;
+        if (e.key === 'ArrowUp') isMoving.y = -steps;
+        if (e.key === 'ArrowDown') isMoving.y = steps;
     });
 
-
-
+    window.addEventListener('keyup', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') isMoving.x = 0;
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') isMoving.y = 0;
+    });
 })();
