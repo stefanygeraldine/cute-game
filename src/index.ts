@@ -1,7 +1,7 @@
 import { Application, Assets, Graphics } from "pixi.js";
 import { assetsLoad, checkChildCollision, drawGraphic } from "./utils.ts";
 import { IColisionsJSON, ILayer } from "./interfaces.ts";
-import { steps } from "./constants.ts";
+import { steps, height } from "./constants.ts";
 
 (async () => {
   const app = new Application();
@@ -55,13 +55,22 @@ import { steps } from "./constants.ts";
   }
 
   let isOnGround = false;
+  let isJumping = false;
 
   app.ticker.add(() => {
     const collisionSides = checkChildCollision(player, collidersGraphics);
     isOnGround = collisionSides.includes("down");
 
+    // apply physics
     if (!isOnGround && !collisionSides.includes("stairs")) {
       player.y += steps;
+    }
+    //jumping
+    if (isJumping) {
+      if (collisionSides.includes("down")) {
+        player.y -= height;
+        isJumping = false;
+      }
     }
   });
 
@@ -78,8 +87,9 @@ import { steps } from "./constants.ts";
       player.y -= steps;
 
     if (e.key === " ") {
-      console.log("Salto activado");
-      // Agregar la lógica para el salto aquí
+      if (collisionSides.includes("down")) {
+        isJumping = true;
+      }
     }
   });
 })();
