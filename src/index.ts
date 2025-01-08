@@ -1,7 +1,7 @@
 import { Application, Assets, Graphics } from "pixi.js";
 import { assetsLoad, checkChildCollision, drawGraphic } from "./utils.ts";
-import { IColisionsJSON, ILayer } from "./interfaces.ts";
-import { steps, height } from "./constants.ts";
+import { IColisionsJSON, IGraphics, ILayer, IPlayer } from "./interfaces.ts";
+import { steps, height, maxSpeed, incrementSpeed } from "./constants.ts";
 
 (async () => {
   const app = new Application();
@@ -15,11 +15,18 @@ import { steps, height } from "./constants.ts";
   const bg1 = await assetsLoad("src/assets/tilemap01.1.png");
   app.stage.addChild(bg1);
 
-  const player = await assetsLoad("https://pixijs.com/assets/bunny.png");
+  const player: IPlayer = await assetsLoad(
+    "https://pixijs.com/assets/bunny.png",
+  );
   player.x = 530;
   player.y = 670;
   player.width = 50;
   player.height = 50;
+  player.positionX = 0;
+  player.positionY = 0;
+  player.speedY = 0;
+  player.speedX = 0;
+
   app.stage.addChild(player);
 
   const collidersGraphics = new Graphics();
@@ -32,7 +39,7 @@ import { steps, height } from "./constants.ts";
   if (collidersLayer) {
     collidersLayer.objects.forEach((object) => {
       if (!object.polygon) return;
-      const childGraphics = drawGraphic(object);
+      const childGraphics: IGraphics = drawGraphic(object);
       childGraphics.scale.set(4.5);
       childGraphics.type = "collision";
       collidersGraphics.addChild(childGraphics);
@@ -46,7 +53,7 @@ import { steps, height } from "./constants.ts";
   if (stairsLayer) {
     stairsLayer.objects.forEach((object) => {
       if (!object.polygon) return;
-      const childGraphics = drawGraphic(object);
+      const childGraphics: IGraphics = drawGraphic(object);
       childGraphics.scale.set(4.5);
       childGraphics.type = "stairs";
       collidersGraphics.addChild(childGraphics);
@@ -56,6 +63,8 @@ import { steps, height } from "./constants.ts";
 
   let isOnGround = false;
   let isJumping = false;
+  let movingRight = false;
+  let movingLeft = false;
 
   app.ticker.add(() => {
     const collisionSides = checkChildCollision(player, collidersGraphics);
@@ -72,17 +81,24 @@ import { steps, height } from "./constants.ts";
         isJumping = false;
       }
     }
+
+    if (movingRight) {
+      player.positionX += player.speedX;
+    }
+    if (movingLeft) {
+      player.positionX -= player.speedX;
+    }
+
+    // Actualizar posición del personaje
+
+    player.x = player.positionX ?? 0;
+    //player.y = player.positionY ?? 0;
   });
 
   window.addEventListener("keydown", (e) => {
     const collisionSides = checkChildCollision(player, collidersGraphics);
-    console.log("...", e.key);
     if (e.key === "ArrowDown" && !collisionSides.includes("down"))
       player.y += steps;
-    if (e.key === "ArrowRight" && !collisionSides.includes("right"))
-      player.x += steps;
-    if (e.key === "ArrowLeft" && !collisionSides.includes("left"))
-      player.x -= steps;
     if (e.key === "ArrowUp" && collisionSides.includes("stairs"))
       player.y -= steps;
 
@@ -91,5 +107,33 @@ import { steps, height } from "./constants.ts";
         isJumping = true;
       }
     }
+
+    if (isJumping) {
+      /* empty */
+    } else {
+      if (e.key === "ArrowRight" && !collisionSides.includes("right")) {
+        if (player.speedX !== maxSpeed) {
+          player.speedX += incrementSpeed;
+        }
+
+        movingRight = true;
+      }
+
+      if (e.key === "ArrowLeft" && !collisionSides.includes("left")) {
+        if (player.speedX !== maxSpeed) {
+          player.speedX += incrementSpeed;
+        }
+        movingLeft = true;
+      }
+    }
+  });
+
+  document.addEventListener("keyup", (e) => {
+    if (e.key === "ArrowRight") {
+      movingRight = false;
+    } else if (e.key === "ArrowLeft") {
+      movingLeft = false;
+    }
+    player.speedX = 0;
   });
 })();
