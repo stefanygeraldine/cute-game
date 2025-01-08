@@ -1,7 +1,14 @@
 import { Application, Assets, Graphics } from "pixi.js";
 import { assetsLoad, checkChildCollision, drawGraphic } from "./utils.ts";
 import { IColisionsJSON, IGraphics, ILayer, IPlayer } from "./interfaces.ts";
-import { steps, height, maxSpeed, incrementSpeed } from "./constants.ts";
+import {
+  steps,
+  height,
+  maxJump,
+  maxSpeed,
+  incrementSpeed,
+  floorPosition,
+} from "./constants.ts";
 
 (async () => {
   const app = new Application();
@@ -23,7 +30,7 @@ import { steps, height, maxSpeed, incrementSpeed } from "./constants.ts";
   player.width = 50;
   player.height = 50;
   player.positionX = 0;
-  player.positionY = 0;
+  player.positionY = floorPosition;
   player.speedY = 0;
   player.speedX = 0;
 
@@ -65,8 +72,19 @@ import { steps, height, maxSpeed, incrementSpeed } from "./constants.ts";
   let isJumping = false;
   let movingRight = false;
   let movingLeft = false;
+  let isGoingUp = false;
 
-  app.ticker.add(() => {
+  function updatePlayerPosition() {
+    if (movingRight) {
+      player.positionX += player.speedX;
+    } else if (movingLeft) {
+      player.positionX -= player.speedX;
+    } else {
+      player.speedX = 0;
+    }
+
+    // Actualizar posición del personaje
+
     const collisionSides = checkChildCollision(player, collidersGraphics);
     isOnGround = collisionSides.includes("down");
 
@@ -74,66 +92,66 @@ import { steps, height, maxSpeed, incrementSpeed } from "./constants.ts";
     if (!isOnGround && !collisionSides.includes("stairs")) {
       player.y += steps;
     }
+
     //jumping
     if (isJumping) {
-      if (collisionSides.includes("down")) {
-        player.y -= height;
-        isJumping = false;
+      if (player.positionY > maxJump && isGoingUp) {
+        player.positionY -= 3;
+      } else {
+        isGoingUp = false;
+        player.positionY += 3;
+        if (collisionSides.includes("down")) {
+          //player.y -= height;
+          isJumping = false;
+        }
       }
+      //console.log(player.positionY);
     }
-
-    if (movingRight) {
-      player.positionX += player.speedX;
-    }
-    if (movingLeft) {
-      player.positionX -= player.speedX;
-    }
-
-    // Actualizar posición del personaje
 
     player.x = player.positionX ?? 0;
-    //player.y = player.positionY ?? 0;
+    player.y = player.positionY ?? 0;
+  }
+
+  app.ticker.add(() => {
+    updatePlayerPosition();
   });
 
   window.addEventListener("keydown", (e) => {
+    console.log(e.key);
     const collisionSides = checkChildCollision(player, collidersGraphics);
-    if (e.key === "ArrowDown" && !collisionSides.includes("down"))
+
+    if (e.key === "ArrowDown" && !collisionSides.includes("down")) {
       player.y += steps;
-    if (e.key === "ArrowUp" && collisionSides.includes("stairs"))
+    }
+
+    if (e.key === "ArrowUp" && collisionSides.includes("stairs")) {
       player.y -= steps;
+    }
 
     if (e.key === " ") {
-      if (collisionSides.includes("down")) {
-        isJumping = true;
-      }
+      isJumping = true;
+      isGoingUp = true;
     }
 
     if (isJumping) {
       /* empty */
+      //console.log("aki");
     } else {
       if (e.key === "ArrowRight" && !collisionSides.includes("right")) {
-        if (player.speedX !== maxSpeed) {
-          player.speedX += incrementSpeed;
-        }
-
+        if (player.speedX !== maxSpeed) player.speedX += incrementSpeed;
         movingRight = true;
       }
 
       if (e.key === "ArrowLeft" && !collisionSides.includes("left")) {
-        if (player.speedX !== maxSpeed) {
-          player.speedX += incrementSpeed;
-        }
+        if (player.speedX !== maxSpeed) player.speedX += incrementSpeed;
         movingLeft = true;
       }
     }
   });
 
   document.addEventListener("keyup", (e) => {
-    if (e.key === "ArrowRight") {
-      movingRight = false;
-    } else if (e.key === "ArrowLeft") {
-      movingLeft = false;
-    }
-    player.speedX = 0;
+    if (e.key === "ArrowRight") movingRight = false;
+    if (e.key === "ArrowLeft") movingLeft = false;
+    //if (e.key === " ") isJumping = false;
   });
 })();

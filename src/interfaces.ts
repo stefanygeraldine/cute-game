@@ -40,3 +40,6 @@ export interface IPlayer extends Sprite {
 export interface IGraphics extends Graphics {
   type?: string;
 }
+export interface IParentGraphics extends Graphics {
+  children: IGraphics;
+}
