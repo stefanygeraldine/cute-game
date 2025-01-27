@@ -1,10 +1,9 @@
-import { Application, Assets, Graphics } from "pixi.js";
+import { Application, Assets, Graphics, log2 } from "pixi.js";
 import { assetsLoad, checkChildCollision, drawGraphic } from "./utils.ts";
 import { IColisionsJSON, IGraphics, ILayer, IPlayer } from "./interfaces.ts";
 import {
   steps,
-  height,
-  maxJump,
+  maxHeightJump,
   maxSpeed,
   incrementSpeed,
   floorPosition,
@@ -22,13 +21,11 @@ import {
   const bg1 = await assetsLoad("src/assets/tilemap01.1.png");
   app.stage.addChild(bg1);
 
-  const player: IPlayer = await assetsLoad(
-    "https://pixijs.com/assets/bunny.png",
-  );
-  player.x = 530;
-  player.y = 670;
-  player.width = 50;
-  player.height = 50;
+  const player: IPlayer = await assetsLoad("src/assets/character1.png");
+  player.x = 0;
+  player.y = floorPosition;
+  player.width = 75;
+  player.height = 80;
   player.positionX = 0;
   player.positionY = floorPosition;
   player.speedY = 0;
@@ -73,39 +70,40 @@ import {
   let movingRight = false;
   let movingLeft = false;
   let isGoingUp = false;
+  let floorHeight = 0;
 
   function updatePlayerPosition() {
-    if (movingRight) {
+    const collisionSides = checkChildCollision(player, collidersGraphics);
+    isOnGround = collisionSides.includes("down");
+
+    // apply physics
+    if (!isJumping && !isOnGround && !collisionSides.includes("stairs")) {
+      player.positionY += steps;
+    }
+
+    if (isOnGround) {
+      floorHeight = player.y; // - 10; // set a different value
+    }
+
+    if (movingRight && !collisionSides.includes("right")) {
       player.positionX += player.speedX;
-    } else if (movingLeft) {
+    } else if (movingLeft && !collisionSides.includes("left")) {
       player.positionX -= player.speedX;
     } else {
       player.speedX = 0;
     }
 
-    // Actualizar posición del personaje
-
-    const collisionSides = checkChildCollision(player, collidersGraphics);
-    isOnGround = collisionSides.includes("down");
-
-    // apply physics
-    if (!isOnGround && !collisionSides.includes("stairs")) {
-      player.y += steps;
-    }
-
     //jumping
     if (isJumping) {
-      if (player.positionY > maxJump && isGoingUp) {
+      if (player.positionY >= floorHeight - maxHeightJump && isGoingUp) {
         player.positionY -= 3;
       } else {
         isGoingUp = false;
         player.positionY += 3;
         if (collisionSides.includes("down")) {
-          //player.y -= height;
           isJumping = false;
         }
       }
-      //console.log(player.positionY);
     }
 
     player.x = player.positionX ?? 0;
@@ -117,41 +115,34 @@ import {
   });
 
   window.addEventListener("keydown", (e) => {
-    console.log(e.key);
     const collisionSides = checkChildCollision(player, collidersGraphics);
 
     if (e.key === "ArrowDown" && !collisionSides.includes("down")) {
-      player.y += steps;
+      player.positionY += steps;
     }
 
     if (e.key === "ArrowUp" && collisionSides.includes("stairs")) {
-      player.y -= steps;
+      player.positionY -= steps;
     }
 
     if (e.key === " ") {
       isJumping = true;
-      isGoingUp = true;
+      if (collisionSides.includes("down")) isGoingUp = true;
     }
 
-    if (isJumping) {
-      /* empty */
-      //console.log("aki");
-    } else {
-      if (e.key === "ArrowRight" && !collisionSides.includes("right")) {
-        if (player.speedX !== maxSpeed) player.speedX += incrementSpeed;
-        movingRight = true;
-      }
+    if (e.key === "ArrowRight" && !collisionSides.includes("right")) {
+      if (player.speedX !== maxSpeed) player.speedX += incrementSpeed;
+      movingRight = true;
+    }
 
-      if (e.key === "ArrowLeft" && !collisionSides.includes("left")) {
-        if (player.speedX !== maxSpeed) player.speedX += incrementSpeed;
-        movingLeft = true;
-      }
+    if (e.key === "ArrowLeft" && !collisionSides.includes("left")) {
+      if (player.speedX !== maxSpeed) player.speedX += incrementSpeed;
+      movingLeft = true;
     }
   });
 
   document.addEventListener("keyup", (e) => {
     if (e.key === "ArrowRight") movingRight = false;
     if (e.key === "ArrowLeft") movingLeft = false;
-    //if (e.key === " ") isJumping = false;
   });
 })();

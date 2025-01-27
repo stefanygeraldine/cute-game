@@ -8,8 +8,8 @@ export async function assetsLoad(src: string): Promise<Sprite> {
 
 export function drawGraphic(object: IObjectPolygon) {
   const childGraphics = new Graphics();
-  childGraphics.fill(0x650a5a, 0.25);
-  childGraphics.stroke({ width: 1, color: 0xff00ff });
+  childGraphics.fill(0x650a5a, 0);
+  childGraphics.stroke({ width: 1, color: 0xff00ff, alpha: 0 });
   childGraphics.moveTo(
     object.x + object.polygon[0].x,
     object.y + object.polygon[0].y,
