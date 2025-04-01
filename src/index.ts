@@ -1,4 +1,4 @@
-import { Application, Assets, Graphics } from "pixi.js";
+import { Application, Assets, Graphics, Sprite, Texture } from "pixi.js";
 import { assetsLoad, checkChildCollision, drawGraphic } from "./utils.ts";
 import {
   IColisionsJSON,
@@ -27,7 +27,21 @@ import {
   const bg1 = await assetsLoad("src/assets/tilemap01.1.png");
   app.stage.addChild(bg1);
 
-  const player: IPlayer = await assetsLoad("src/assets/character1.png");
+  class Player extends Sprite implements IPlayer {
+    speedX = 0;
+    speedY = 0;
+    positionX = 0;
+    positionY = 0;
+
+    constructor(texture: Texture) {
+      super(texture);
+    }
+  }
+
+  const sprite = await assetsLoad("src/assets/character1.png");
+  const texture = sprite.texture;
+  const player = new Player(texture);
+
   player.x = 0;
   player.y = floorPosition;
   player.width = 75;
@@ -37,10 +51,13 @@ import {
   player.speedY = 0;
   player.speedX = 0;
 
-  player.positionY = player.positionY ?? 0;
   app.stage.addChild(player);
 
-  const collidersGraphics: IParentGraphics = new Graphics();
+  // const collidersGraphics: IParentGraphics = new Graphics();
+
+  const collidersGraphics = new Graphics() as IParentGraphics;
+  collidersGraphics.children = collidersGraphics.children as IGraphics[];
+
   const colliderJson: IColisionsJSON = await Assets.load(
     "src/assets/tilemap01.json",
   );
