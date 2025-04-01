@@ -1,4 +1,5 @@
 {
+  "homepage": "https://stefanygeraldine.github.io/cute-game",
   "name": "cute-game",
   "private": true,
   "version": "0.0.0",
@@ -6,7 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
@@ -22,6 +25,7 @@
   },
   "dependencies": {
     "@pixi/tilemap": "^5.0.1",
+    "gh-pages": "^6.3.0",
     "pixi.js": "^8.6.6",
     "sat": "^0.9.0"
   }

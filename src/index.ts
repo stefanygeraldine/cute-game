@@ -1,6 +1,12 @@
-import { Application, Assets, Graphics, log2 } from "pixi.js";
+import { Application, Assets, Graphics } from "pixi.js";
 import { assetsLoad, checkChildCollision, drawGraphic } from "./utils.ts";
-import { IColisionsJSON, IGraphics, ILayer, IPlayer } from "./interfaces.ts";
+import {
+  IColisionsJSON,
+  IGraphics,
+  ILayer,
+  IParentGraphics,
+  IPlayer,
+} from "./interfaces.ts";
 import {
   steps,
   maxHeightJump,
@@ -31,9 +37,10 @@ import {
   player.speedY = 0;
   player.speedX = 0;
 
+  player.positionY = player.positionY ?? 0;
   app.stage.addChild(player);
 
-  const collidersGraphics = new Graphics();
+  const collidersGraphics: IParentGraphics = new Graphics();
   const colliderJson: IColisionsJSON = await Assets.load(
     "src/assets/tilemap01.json",
   );

@@ -1,5 +1,5 @@
 import { Assets, Graphics, Sprite } from "pixi.js";
-import { IObjectPolygon } from "./interfaces.ts";
+import { IObjectPolygon, IParentGraphics } from "./interfaces.ts";
 
 export async function assetsLoad(src: string): Promise<Sprite> {
   const asset = await Assets.load(src);
@@ -26,7 +26,7 @@ export function drawGraphic(object: IObjectPolygon) {
 
 export function checkChildCollision(
   player: Sprite,
-  parentGraphics: Graphics,
+  parentGraphics: IParentGraphics,
 ): string[] {
   const collisionSides: string[] = [];
   for (const child of parentGraphics.children) {
