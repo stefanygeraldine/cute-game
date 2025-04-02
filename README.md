@@ -2,7 +2,7 @@
 
 
 
-- [https://stefanygeraldine.github.io/cute-game/](https://stefanygeraldine.github.io/shaders-patterns/)
+- [https://stefanygeraldine.github.io/cute-game/](https://stefanygeraldine.github.io/cute-game/)
 
 ![Project Screenshot](public/img.png)
 
