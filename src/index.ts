@@ -20,11 +20,11 @@ import {
   await app.init({ background: "#000000", resizeTo: window });
   document.body.appendChild(app.canvas);
 
-  const treesBg = await assetsLoad("src/assets/project-1.png");
+  const treesBg = await assetsLoad("assets/project-1.png");
   treesBg.scale.set(4.5);
   app.stage.addChild(treesBg);
 
-  const bg1 = await assetsLoad("src/assets/tilemap01.1.png");
+  const bg1 = await assetsLoad("assets/tilemap01.1.png");
   app.stage.addChild(bg1);
 
   class Player extends Sprite implements IPlayer {
@@ -38,7 +38,7 @@ import {
     }
   }
 
-  const sprite = await assetsLoad("src/assets/character1.png");
+  const sprite = await assetsLoad("assets/character1.png");
   const texture = sprite.texture;
   const player = new Player(texture);
 
@@ -59,7 +59,7 @@ import {
   collidersGraphics.children = collidersGraphics.children as IGraphics[];
 
   const colliderJson: IColisionsJSON = await Assets.load(
-    "src/assets/tilemap01.json",
+    "assets/tilemap01.json",
   );
   const collidersLayer: ILayer | undefined = colliderJson.layers.find(
     (layer: ILayer) => layer.name === "colliders",
