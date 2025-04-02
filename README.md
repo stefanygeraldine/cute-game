@@ -11,4 +11,4 @@
 This project is a first try doing pixel art and implementing 
 the amazing Pixi.js 2D library. I created a simple game where you can move 
 a character with the arrow keys and jump using the space bar. The goal is to
-collect heads (in process this feature).
+collect hearts (in process this feature).
